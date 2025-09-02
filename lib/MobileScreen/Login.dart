@@ -1,8 +1,57 @@
 import 'package:flutter/material.dart';
-import 'Register.dart';
+import 'package:http/http.dart' as http;
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool isLoading = false;
+  String errorMessage = '';
+  bool obscurePassword = true;
+
+  Future<void> login() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    final url = Uri.parse('https://bradedsale.helioho.st/Dormitory/login.php');
+    final response = await http.post(
+      url,
+      body: {
+        'email': emailController.text,
+        'password': passwordController.text,
+      },
+    );
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (response.statusCode == 200) {
+      // Show SnackBar and navigate to home after a short delay
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login Successful!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Future.delayed(Duration(seconds: 2), () {
+        Navigator.pushReplacementNamed(context, '/home');
+      });
+    } else {
+      setState(() {
+        errorMessage = 'Login failed. Check your credentials.';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +120,7 @@ class LoginScreen extends StatelessWidget {
                   Text('Email Address', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
                   TextField(
+                    controller: emailController,
                     decoration: InputDecoration(
                       hintText: 'Enter your email',
                       prefixIcon: Icon(Icons.email_outlined),
@@ -83,16 +133,32 @@ class LoginScreen extends StatelessWidget {
                   Text('Password', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
                   TextField(
-                    obscureText: true,
+                    controller: passwordController,
+                    obscureText: obscurePassword,
                     decoration: InputDecoration(
                       hintText: 'Enter your password',
                       prefixIcon: Icon(Icons.lock_outline),
-                      suffixIcon: Icon(Icons.visibility_off_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
+                  SizedBox(height: 16),
+                  if (errorMessage.isNotEmpty)
+                    Text(
+                      errorMessage,
+                      style: TextStyle(color: Colors.red),
+                    ),
                   SizedBox(height: 32),
                   Row(
                     children: [
@@ -105,14 +171,23 @@ class LoginScreen extends StatelessWidget {
                             ),
                             padding: EdgeInsets.symmetric(vertical: 16),
                           ),
-                          onPressed: () {},
-                          child: Text(
-                            'Sign In',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
+                          onPressed: isLoading ? null : login,
+                          child: isLoading
+                              ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                       ),
                       SizedBox(width: 16),
@@ -126,12 +201,7 @@ class LoginScreen extends StatelessWidget {
                             padding: EdgeInsets.symmetric(vertical: 16),
                           ),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegisterScreen(),
-                              ),
-                            );
+                            Navigator.pushNamed(context, '/register');
                           },
                           child: Text(
                             'Register',

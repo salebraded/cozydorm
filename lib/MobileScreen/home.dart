@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cozydorm/MobileScreen/viewdetails.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -353,10 +354,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                         elevation: 2,
                                       ),
                                       onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('Viewing details for ${prop['title']}'),
-                                            duration: Duration(seconds: 1),
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => ViewDetailsScreen(property: prop),
                                           ),
                                         );
                                       },
